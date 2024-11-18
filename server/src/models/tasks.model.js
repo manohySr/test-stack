@@ -1,4 +1,5 @@
 const Task = require("./tasks.mongo.js");
+
 async function findAllTask(priority, completed) {
   try {
     // Filter depending on the args
@@ -26,6 +27,7 @@ async function findAllTask(priority, completed) {
     throw new Error("Failed to fetch tasks. Please try again.");
   }
 }
+
 async function findTaskById(id) {
   try {
     // Perform the query to find a task with the provided id
@@ -42,12 +44,14 @@ async function findTaskById(id) {
     }
 
     console.log(task);
+
     return task;
   } catch (error) {
     console.error("Error finding task by ID:", error);
     throw new Error("Failed to find task by custom ID");
   }
 }
+
 async function createTask(task) {
   try {
     const newTask = await Task.create(task);
@@ -57,6 +61,7 @@ async function createTask(task) {
     throw new Error("Failed to create task. Please try again.");
   }
 }
+
 async function deleteTaskById(id) {
   try {
     await Task.deleteOne({ id });
@@ -66,6 +71,7 @@ async function deleteTaskById(id) {
     throw new Error("Failed to delete task. Please try again.");
   }
 }
+
 async function updateTaskById(id, updateData) {
   try {
     // Ensure updateFields is not empty
