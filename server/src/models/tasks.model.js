@@ -66,6 +66,29 @@ async function deleteTaskById(id) {
     throw new Error("Failed to delete task. Please try again.");
   }
 }
+async function updateTaskById(id, updateData) {
+  try {
+    // Ensure updateFields is not empty
+    if (!updateData || Object.keys(updateData).length === 0) {
+      throw new Error("No fields provided for update");
+    }
+
+    const updatedTask = await Task.findOneAndUpdate(
+      { id },
+      { $set: updateData },
+      { new: true },
+    );
+    return updatedTask;
+  } catch (error) {
+    console.error("Error updating task:", error);
+    throw new Error("Failed to update task. Please try again.");
+  }
+}
+
 module.exports = {
+  findAllTask,
   createTask,
+  findTaskById,
+  updateTaskById,
+  deleteTaskById,
 };
