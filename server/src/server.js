@@ -4,6 +4,7 @@ const { expressMiddleware } = require("@apollo/server/express4");
 const express = require("express");
 const { mergeSchemas } = require("@graphql-tools/schema");
 
+const { mongoConnect } = require("./../config/db.js");
 const taskSchema = require("./schema/task.js");
 
 const app = express();
@@ -17,6 +18,7 @@ const server = new ApolloServer({
 });
 
 async function startServer() {
+  await mongoConnect();
   await server.start();
 
   app.use("/v1/graphql", expressMiddleware(server));

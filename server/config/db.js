@@ -14,13 +14,9 @@ async function mongoConnect() {
     await mongoose.connect(MONGO_URL, clientOptions);
     await mongoose.connection.db.admin().command({ ping: 1 });
 
-    mongoose.connection.once("open", () => {
-      console.log("MongoDB connecion ready!");
-    });
-
-    mongoose.connection.on("error", (err) => {
-      console.error(err);
-    });
+    console.log(
+      "Pinged your deployment. You successfully connected to MongoDB!",
+    );
   } catch (error) {
     console.error(`Error connecting to MongoDB: ${error}`);
     process.exit(1); // Exit process with failure
