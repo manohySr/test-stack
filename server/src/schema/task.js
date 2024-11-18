@@ -1,23 +1,19 @@
 const { makeExecutableSchema } = require("@graphql-tools/schema");
+const { randomUUID } = require("crypto");
+const {
+  findAllTask,
+  createTask,
+  findTaskById,
+  updateTaskById,
+  deleteTaskById,
+} = require("./../models/tasks.model.js");
 
-let tasks = [
-  {
-    id: "1",
-    title: "Learn GraphQL",
-    description: "Study the basics of GraphQL",
-    completed: false,
-    priority: "high",
-  },
-  {
-    id: "2",
-    title: "Build Backend",
-    description: "Create a Node.js backend with GraphQL",
-    completed: false,
-    priority: "medium",
-  },
-];
-
-const validPriorities = ["low", "medium", "high"];
+function ErrorIfNotValidPriority(priority) {
+  const validPriorities = ["low", "medium", "high"];
+  if (!validPriorities.includes(priority)) {
+    throw new Error("Invalid priority value");
+  }
+}
 
 const typeDefs = `#graphql
   type Task {
@@ -49,70 +45,68 @@ const typeDefs = `#graphql
 
 const resolvers = {
   Query: {
-    getTasks: (priority, completed) => tasks,
+    getTasks: async (_, { priority, completed }) => {
+      if (priority) {
+        ErrorIfNotValidPriority(priority);
+      }
+      return await findAllTask(priority, completed);
+    },
 
     getTaskById: (_, { id }) => {
-      const task = tasks.find((task) => task.id === id);
-      if (!task) throw new Error("Task not found");
-      return task;
+      return findTaskById(String(id));
     },
   },
 
   Mutation: {
-    addTask: (_, { title, priority, description }) => {
-      if (!validPriorities.includes(priority)) {
-        throw new Error("Invalid priority value");
-      }
-
+    addTask: async (_, { title, priority, description }) => {
+      ErrorIfNotValidPriority(priority);
       const newTask = {
-        id: String(tasks.length + 1),
+        id: String(randomUUID()),
         title,
         description: description || null,
         completed: false,
         priority,
       };
 
-      console.log(newTask);
-
-      tasks.push(newTask);
-      return newTask;
-    },
-
-    toggleTaskCompletion: (_, { id }) => {
-      const task = tasks.find((task) => task.id === id);
-      if (!task) throw new Error("Task not found");
-      task.completed = !task.completed;
-      return task;
-    },
-
-    updateTask: (_, { id, title, priority, completed, description }) => {
-      const task = tasks.find((task) => task.id === id);
-      if (!task) throw new Error("Task not found");
-
-      // Validate the priority if it's being updated
-      if (priority) {
-        if (!validPriorities.includes(priority)) {
-          throw new Error(
-            `Invalid priority value. Allowed values are: ${validPriorities.join(", ")}`,
-          );
-        }
+      try {
+        const task = await createTask(newTask);
+        return task;
+      } catch (error) {
+        console.error("Error adding task:", error);
+        throw new Error("Failed to add task. Please try again.");
       }
-
-      // Update fields only if they are provided
-      if (title !== undefined) task.title = title;
-      if (priority !== undefined) task.priority = priority;
-      if (completed !== undefined) task.completed = completed;
-      if (description !== undefined) task.description = description;
-
-      return task;
     },
 
-    deleteTask: (_, { id }) => {
-      const taskIndex = tasks.findIndex((task) => task.id === id);
-      if (taskIndex === -1) throw new Error("Task not found");
+    updateTask: async (_, { id, title, priority, completed, description }) => {
+      try {
+        const updateData = {};
 
-      tasks.splice(taskIndex, 1);
-      return `Task with ID ${id} deleted successfully`;
+        if (title) updateData.title = title;
+        if (priority) updateData.priority = priority;
+        if (completed !== undefined) updateData.completed = completed;
+        if (description) updateData.description = description;
+
+        // If no fields are provided to update, throw an error
+        if (Object.keys(updateData).length === 0) {
+          throw new Error("No fields provided for update");
+        }
+
+        const updatedTask = await updateTaskById(String(id), updateData);
+        return updatedTask;
+      } catch (error) {
+        console.error("Error updating task:", error);
+        throw new Error("Failed to update task. Please try again.");
+      }
+    },
+
+    deleteTask: async (_, { id }) => {
+      try {
+        const deletionResult = await deleteTaskById(String(id));
+        return deletionResult;
+      } catch (error) {
+        console.error("Error deleting task:", error);
+        throw new Error("Failed to delete task. Please try again.");
+      }
     },
   },
 };
