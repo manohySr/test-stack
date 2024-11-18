@@ -48,7 +48,7 @@ async function findTaskById(id) {
     return task;
   } catch (error) {
     console.error("Error finding task by ID:", error);
-    throw new Error("Failed to find task by custom ID");
+    throw new Error("Failed to find task by ID");
   }
 }
 
@@ -64,6 +64,7 @@ async function createTask(task) {
 
 async function deleteTaskById(id) {
   try {
+    await findTaskById(id);
     await Task.deleteOne({ id });
     return "Deleted successfully";
   } catch (error) {
@@ -74,6 +75,8 @@ async function deleteTaskById(id) {
 
 async function updateTaskById(id, updateData) {
   try {
+    await findTaskById(id);
+
     // Ensure updateFields is not empty
     if (!updateData || Object.keys(updateData).length === 0) {
       throw new Error("No fields provided for update");
