@@ -57,6 +57,15 @@ async function createTask(task) {
     throw new Error("Failed to create task. Please try again.");
   }
 }
+async function deleteTaskById(id) {
+  try {
+    await Task.deleteOne({ id });
+    return "Deleted successfully";
+  } catch (error) {
+    console.error("Error deleting task:", error);
+    throw new Error("Failed to delete task. Please try again.");
+  }
+}
 module.exports = {
   createTask,
 };
