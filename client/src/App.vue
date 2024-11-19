@@ -3,6 +3,9 @@ import Title from "@/components/ui/Title.vue";
 import Info from "@/components/ui/Info.vue";
 import IconButton from "@/components/ui/IconButton.vue";
 import Button from "@/components/ui/Button.vue";
+import graphqlFetch from "./graphql/lib";
+import { computed, onMounted, reactive, watch } from "vue";
+import { deleteTaskQuery, getTasksQuery } from "./graphql/queries";
 
 const priority = {
   high: "haut",
@@ -10,29 +13,67 @@ const priority = {
   low: "bas",
 };
 
-const todos = [
-  {
-    id: 1,
-    title: "Build Backend",
-    description: "Create a Node.js backend with GraphQL",
-    priority: "high",
-    completed: true, // Completed
-  },
-  {
-    id: 2,
-    title: "Design UI",
-    description: "Create a user-friendly UI for the app",
-    priority: "medium",
-    completed: false, // Not Completed
-  },
-  {
-    id: 3,
-    title: "Write Docs",
-    description: "Document API endpoints and architecture",
-    priority: "low",
-    completed: true, // Completed
-  },
-];
+const fetchTaskState = reactive({
+  tasks: [],
+  isLoading: false,
+});
+
+const filter = reactive({
+  priority: null,
+  completed: null,
+});
+
+const fetchTasks = async () => {
+  try {
+    fetchTaskState.isLoading = true;
+    const query = getTasksQuery(filter.priority, filter.completed);
+    const { data } = await graphqlFetch(query);
+    fetchTaskState.tasks = data.getTasks;
+  } catch (error) {
+    console.error(error);
+  } finally {
+    fetchTaskState.isLoading = false;
+  }
+};
+
+const deleteTask = async (id) => {
+  try {
+    const confirm = window.confirm("Etes vous sure de supprimer ?");
+    if (!confirm) {
+      return;
+    }
+    const query = deleteTaskQuery(id);
+    console.log(query);
+    await graphqlFetch(query);
+  } catch (error) {
+    console.log(error);
+  } finally {
+    await fetchTasks();
+  }
+};
+
+onMounted(async () => {
+  await fetchTasks();
+});
+
+const filteredTasks = computed(() => {
+  return fetchTaskState.tasks.filter((task) => {
+    const matchesCompleted =
+      filter.completed === null || task.completed === filter.completed;
+    const matchesPriority =
+      filter.priority === null || task.priority === filter.priority;
+    return matchesCompleted && matchesPriority;
+  });
+});
+
+// I did not use it cause it was heavy
+// watch(
+//   () => filter,
+//   async () => {
+//     await fetchTasks();
+//   },
+//   { deep: true }, // Deep watch to monitor changes within the object
+// );
 
 // import CreateView from "@/components/Create.view.vue";
 // import UpdateView from "./components/Update.view.vue";
@@ -50,24 +91,28 @@ const todos = [
       <Button>Ajouter une tâche</Button>
     </div>
 
-    <div class="flex gap-2">
-      <select class="border p-2 rounded">
-        <option :value="null">Toutes</option>
-        <option :value="true">Complétée(s)</option>
-        <option :value="false">Non complétée(s)</option>
-      </select>
+    <div>
+      <h1 class="mb-2">Filtre:</h1>
+      <div class="flex gap-2">
+        <select v-model="filter.completed" class="border p-2 rounded">
+          <option :value="null">Toutes</option>
+          <option :value="true">Complétée(s)</option>
+          <option :value="false">Non complétée(s)</option>
+        </select>
 
-      <select class="border p-2 rounded">
-        <option value="low">Bas</option>
-        <option value="normal">Normal</option>
-        <option value="high">Haut</option>
-      </select>
+        <select v-model="filter.priority" class="border p-2 rounded">
+          <option :value="null">Toutes</option>
+          <option value="low">Bas</option>
+          <option value="medium">Normal</option>
+          <option value="high">Haut</option>
+        </select>
+      </div>
     </div>
 
     <!-- Todo Cards -->
     <Info>Cliquer pour toggler entre complétée et non complétée</Info>
     <div
-      v-for="todo in todos"
+      v-for="todo in filteredTasks"
       :key="todo.id"
       :class="[
         'flex justify-between  rounded-lg shadow-lg cursor-pointer',
@@ -102,7 +147,11 @@ const todos = [
           {{ todo.completed ? "COMPLETEE" : "NON COMPLETEE" }}
         </span>
 
-        <IconButton class="absolute right-2 bottom-2">
+        <!-- delete button -->
+        <IconButton
+          class="absolute right-2 bottom-2"
+          @click="() => deleteTask(todo.id)"
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             class="w-5 h-5"
