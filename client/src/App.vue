@@ -99,9 +99,6 @@ const showModal = ref(false);
 </script>
 
 <template>
-  <!-- <CreateView /> -->
-  <!-- <UpdateView /> -->
-
   <Modal :isVisible="showModal" @close="showModal = false">
     <CreateView />
   </Modal>
