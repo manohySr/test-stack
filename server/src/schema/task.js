@@ -99,6 +99,26 @@ const resolvers = {
       }
     },
 
+    toggleTaskCompletion: async (_, { id }) => {
+      try {
+        // Fetch the task by its ID
+        const task = await findTaskById(String(id));
+        if (!task) {
+          throw new Error("Task not found");
+        }
+
+        // Toggle the `completed` field
+        const updatedTask = await updateTaskById(String(id), {
+          completed: !task.completed,
+        });
+
+        return updatedTask;
+      } catch (error) {
+        console.error("Error toggling task completion:", error);
+        throw new Error("Failed to toggle task completion. Please try again.");
+      }
+    },
+
     deleteTask: async (_, { id }) => {
       try {
         const deletionResult = await deleteTaskById(String(id));
