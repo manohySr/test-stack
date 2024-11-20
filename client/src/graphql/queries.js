@@ -23,3 +23,31 @@ export const deleteTaskQuery = (id) => {
       deleteTask(id: "${id}")
     }`;
 };
+
+export const toogleCompletionQuery = (id) => {
+  return `#graphql
+    mutation {
+      toggleTaskCompletion(id: "${id}") {
+        id
+        title
+        completed
+       }
+    }`;
+};
+
+export const addTaskQuery = ({ title, description, priority }) => {
+  return `#graphql
+    mutation {
+      addTask(
+        title: "${title}"
+        description: "${description}"
+        priority: "${priority}"
+      ) {
+        id
+        title
+        description
+        priority
+      }
+    }
+  `;
+};
