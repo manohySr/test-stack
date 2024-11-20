@@ -1,11 +1,17 @@
 <script setup>
+import CreateView from "@/components/Create.view.vue";
 import Title from "@/components/ui/Title.vue";
 import Info from "@/components/ui/Info.vue";
 import IconButton from "@/components/ui/IconButton.vue";
 import Button from "@/components/ui/Button.vue";
 import graphqlFetch from "./graphql/lib";
-import { computed, onMounted, reactive, watch } from "vue";
-import { deleteTaskQuery, getTasksQuery } from "./graphql/queries";
+import Modal from "./components/ui/Modal.vue";
+import { computed, onMounted, reactive, ref, watch } from "vue";
+import {
+  deleteTaskQuery,
+  getTasksQuery,
+  toogleCompletionQuery,
+} from "./graphql/queries";
 
 const priority = {
   high: "haut",
@@ -22,6 +28,8 @@ const filter = reactive({
   priority: null,
   completed: null,
 });
+
+const completionState = ref(0);
 
 const fetchTasks = async () => {
   try {
@@ -43,7 +51,6 @@ const deleteTask = async (id) => {
       return;
     }
     const query = deleteTaskQuery(id);
-    console.log(query);
     await graphqlFetch(query);
   } catch (error) {
     console.log(error);
@@ -66,29 +73,45 @@ const filteredTasks = computed(() => {
   });
 });
 
-// I did not use it cause it was heavy
-// watch(
-//   () => filter,
-//   async () => {
-//     await fetchTasks();
-//   },
-//   { deep: true }, // Deep watch to monitor changes within the object
-// );
+const toggleCompletionTask = async (id) => {
+  try {
+    const confirm = window.confirm("Toggler la tache ?");
+    if (!confirm) {
+      return;
+    }
+    completionState.value++;
+    const query = toogleCompletionQuery(id);
+    await graphqlFetch(query);
+  } catch (error) {
+    console.log(error);
+  }
+};
 
-// import CreateView from "@/components/Create.view.vue";
-// import UpdateView from "./components/Update.view.vue";
+watch(
+  () => completionState.value,
+  async () => {
+    await fetchTasks();
+  },
+  { immediate: false },
+);
+
+const showModal = ref(false);
 </script>
 
 <template>
   <!-- <CreateView /> -->
   <!-- <UpdateView /> -->
 
+  <Modal :isVisible="showModal" @close="showModal = false">
+    <CreateView />
+  </Modal>
+
   <div class="p-8 space-y-6">
     <!-- Title -->
     <Title class="text-4xl font-extrabold text-gray-800 mb-4">Todo(s)</Title>
 
     <div class="flex justify-end">
-      <Button>Ajouter une tâche</Button>
+      <Button @click="showModal = true">Ajouter une tâche</Button>
     </div>
 
     <div>
@@ -110,7 +133,7 @@ const filteredTasks = computed(() => {
     </div>
 
     <!-- Todo Cards -->
-    <Info>Cliquer pour toggler entre complétée et non complétée</Info>
+    <Info>Cliquer pour la tache toggler entre complétée et non complétée</Info>
     <div
       v-for="todo in filteredTasks"
       :key="todo.id"
@@ -120,6 +143,7 @@ const filteredTasks = computed(() => {
         todo.priority === 'medium' ? 'bg-yellow-500' : '',
         todo.priority === 'low' ? 'bg-green-500' : '',
       ]"
+      @click="() => toggleCompletionTask(todo.id)"
     >
       <div class="flex flex-col p-6 gap-2 text-white">
         <span class="text-xl font-semibold">{{ todo.title }}</span>
