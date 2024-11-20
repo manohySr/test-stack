@@ -75,30 +75,34 @@ const filteredTasks = computed(() => {
 
 const toggleCompletionTask = async (id) => {
   try {
-    const confirm = window.confirm("Toggler la tache ?");
-    if (!confirm) {
-      return;
-    }
-    completionState.value++;
+    const confirm = window.confirm("Toggler la tâche ?");
+    if (!confirm) return;
+
+    fetchTaskState.isLoading = true;
     const query = toogleCompletionQuery(id);
     await graphqlFetch(query);
   } catch (error) {
-    console.log(error);
+    console.error("Error toggling task completion:", error);
+  } finally {
+    fetchTaskState.isLoading = false;
+    await fetchTasks();
   }
 };
-
-watch(
-  () => completionState.value,
-  async () => {
-    await fetchTasks();
-  },
-  { immediate: false },
-);
 
 const showModal = ref(false);
 </script>
 
 <template>
+  <!-- Loader -->
+  <div
+    v-if="fetchTaskState.isLoading"
+    class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50"
+  >
+    <div
+      class="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500 border-solid"
+    ></div>
+  </div>
+
   <Modal :isVisible="showModal" @close="showModal = false">
     <CreateView />
   </Modal>
@@ -130,12 +134,22 @@ const showModal = ref(false);
     </div>
 
     <!-- Todo Cards -->
-    <Info>Cliquer pour la tache toggler entre complétée et non complétée</Info>
+    <Info>Cliquer pour la tâche toggler entre complétée et non complétée</Info>
+
+    <!-- Empty State Message -->
+    <div
+      v-if="!fetchTaskState.isLoading && fetchTaskState.tasks.length === 0"
+      class="text-center text-gray-500 mt-10"
+    >
+      <div class="text-2xl font-bold">Aucune tâche trouvée</div>
+      <p class="text-sm mt-2">Ajoutez une nouvelle tâche pour commencer!</p>
+    </div>
+
     <div
       v-for="todo in filteredTasks"
       :key="todo.id"
       :class="[
-        'flex justify-between  rounded-lg shadow-lg cursor-pointer',
+        'flex justify-between rounded-lg shadow-lg cursor-pointer',
         todo.priority === 'high' ? 'bg-red-500' : '',
         todo.priority === 'medium' ? 'bg-yellow-500' : '',
         todo.priority === 'low' ? 'bg-green-500' : '',
