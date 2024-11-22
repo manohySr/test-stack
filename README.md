@@ -30,3 +30,9 @@ This project is built using [pnpm](https://pnpm.io/) as the package manager for 
   ```bash
   pnpm run start
   ```
+
+- Copy this into your browser
+
+  ```bash
+  http://localhost:5173
+  ```
