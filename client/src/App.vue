@@ -6,12 +6,13 @@ import IconButton from "@/components/ui/IconButton.vue";
 import Button from "@/components/ui/Button.vue";
 import graphqlFetch from "./graphql/lib";
 import Modal from "./components/ui/Modal.vue";
-import { computed, onMounted, reactive, ref, watch } from "vue";
+import { computed, onMounted, reactive, ref } from "vue";
 import {
   deleteTaskQuery,
   getTasksQuery,
   toogleCompletionQuery,
 } from "./graphql/queries";
+import Loader from "./components/Loader.vue";
 
 const priority = {
   high: "haut",
@@ -28,8 +29,6 @@ const filter = reactive({
   priority: null,
   completed: null,
 });
-
-const completionState = ref(0);
 
 const fetchTasks = async () => {
   try {
@@ -93,22 +92,15 @@ const showModal = ref(false);
 </script>
 
 <template>
-  <!-- Loader -->
-  <div
-    v-if="fetchTaskState.isLoading"
-    class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50"
-  >
-    <div
-      class="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500 border-solid"
-    ></div>
+  <div v-if="fetchTaskState.isLoading">
+    <Loader />
   </div>
 
   <Modal :isVisible="showModal" @close="showModal = false">
     <CreateView />
   </Modal>
 
-  <div class="p-8 space-y-6">
-    <!-- Title -->
+  <div class="p-8 space-y-6 lg:w-10/12 mx-auto">
     <Title class="text-4xl font-extrabold text-gray-800 mb-4">Todo(s)</Title>
 
     <div class="flex justify-end">
@@ -133,7 +125,6 @@ const showModal = ref(false);
       </div>
     </div>
 
-    <!-- Todo Cards -->
     <Info>Cliquer pour la tâche toggler entre complétée et non complétée</Info>
 
     <!-- Empty State Message -->
