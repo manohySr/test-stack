@@ -13,6 +13,8 @@ This project is built using [pnpm](https://pnpm.io/) as the package manager for 
   npm install -g pnpm
   ```
 
+- I just emailed you for other instruction
+
 ## Installation
 
 - Install all dependencies using
