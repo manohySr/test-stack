@@ -18,7 +18,7 @@ This project is built using [pnpm](https://pnpm.io/) as the package manager for 
 - Install all dependencies using
 
   ```bash
-  pnpm run install:dep
+  pnpm run install:dependencies
   ```
 
 ## Running the project
